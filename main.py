@@ -5,8 +5,8 @@ import numpy as np
 import functionTools as tools
 
 
-# dataframe cleaning
-appendData = []
+# import and dataframe cleaning
+"""appendData = []
 cleanData = pd.DataFrame(columns=['Series', 'Tournament', 'Round', 'B365W', 'B365L', 'Year', 'Spread'])
 for f in list(glob.glob('/Users/emmanuelmakonga/Desktop/projet/tennis/data/20*.xls*')):
     try:
@@ -21,12 +21,14 @@ for f in list(glob.glob('/Users/emmanuelmakonga/Desktop/projet/tennis/data/20*.x
         pass
 
 cleanData = pd.concat(appendData)
-cleanData = cleanData.reset_index(drop=True)
+cleanData = cleanData.reset_index(drop=True)"""
+
+cleanData = pd.read_excel('cleanData.xlsx')
 
 #args
 OddMax= 3 #test by year
 #by year
-for t in cleanData['Year'].unique():
+"""for t in cleanData['Year'].unique():
     #filter
     data = cleanData[cleanData['Year'] == t]
     data = data[(data['B365W'] < OddMax) & (data['B365L'] < OddMax)]
@@ -39,10 +41,10 @@ for t in cleanData['Year'].unique():
         spreadData = spreadData.append({'thresholdSpread' : i, 'freq' : float(len(tempData[tempData['OWin'] == 'Yes']))/float(len(tempData)), 'nbOutWin' : len(tempData[tempData['OWin'] == 'Yes']), 'nbOutLoss': len(tempData[tempData['OWin'] == 'No']), 'WinOddAvg' : np.mean(tempData['B365W']) }, ignore_index=True)
 
     #xlpath = t + '_spreadData.xlsx'
-    #spreadData.to_excel(xlpath)
+    #spreadData.to_excel(xlpath)"""
 
 #by series
-for s in cleanData['Series'].unique():
+"""for s in cleanData['Series'].unique():
     # filter
     data = cleanData[cleanData['Series'] == s]
     data = data[(data['B365W'] < OddMax) & (data['B365L'] < OddMax)]
@@ -58,10 +60,10 @@ for s in cleanData['Series'].unique():
              'WinOddAvg': np.mean(tempData['B365W'])}, ignore_index=True)
 
     #xlpath = s + '_spreadData.xlsx'
-    #spreadData.to_excel(xlpath)
+    #spreadData.to_excel(xlpath)"""
 
 #by round
-for r in cleanData['Round'].unique():
+"""for r in cleanData['Round'].unique():
     # filter
     data = cleanData[cleanData['Round'] == r]
     data = data[(data['B365W'] < OddMax) & (data['B365L'] < OddMax)]
@@ -77,4 +79,4 @@ for r in cleanData['Round'].unique():
              'WinOddAvg': np.mean(tempData['B365W'])}, ignore_index=True)
 
     #xlpath = r + '_spreadData.xlsx'
-    #spreadData.to_excel(xlpath)
+    #spreadData.to_excel(xlpath)"""

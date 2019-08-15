@@ -19,8 +19,3 @@ def left(s, amount):
 def extractNumberFromString(s):
     regex = re.compile(r'\d+')
     return regex.findall(s)
-
-tournament = 'Gran Slam'
-yearL = '2018'
-xlpath = yearL + '_' + tournament + '_spreadData.xlsx'
-print(xlpath)

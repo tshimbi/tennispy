@@ -1,48 +1,80 @@
 import pandas as pd
 import glob
-import seaborn as sns
-import matplotlib.pyplot as plt
 from scipy import stats
 import numpy as np
+import functionTools as tools
 
-path = '/Users/emmanuelmakonga/Desktop/projet/tennis/data/2018.xlsx'
 
-filenames=list(glob.glob('/Users/emmanuelmakonga/Desktop/projet/tennis/data/20*.xls*'))
-#data = [pd.read_excel(filename) for filename in filenames]
-data = pd.read_excel(filenames[2])
-print(filenames[2])
-print(data.columns)
+# dataframe cleaning
+appendData = []
+cleanData = pd.DataFrame(columns=['Series', 'Tournament', 'Round', 'B365W', 'B365L', 'Year', 'Spread'])
+for f in list(glob.glob('/Users/emmanuelmakonga/Desktop/projet/tennis/data/20*.xls*')):
+    try:
+        tempData = pd.read_excel(f)
+        yearFile = tools.extractNumberFromString(f)
+        tempData['Year'] = ''.join(yearFile)
+        tempData = tempData[['Series', 'Tournament', 'Round', 'B365W', 'B365L', 'Year']]
+        tempData['Spread'] = tempData['B365W'] - tempData['B365L']
+        tempData['OWin'] = np.where(tempData['Spread']>=0, 'Yes', 'No')
+        appendData.append(tempData)
+    except:
+        pass
 
-data = data[data['Series'] == 'Grand Slam']
-#data = data[(data['Round'] <> 'The Final') & (data['Round'] <> 'Semifinals')& (data['Round'] <> 'Quarterfinals') & (data['Round'] <> '4th Round') & (data['Round'] <> '3th Round')]
+cleanData = pd.concat(appendData)
+cleanData = cleanData.reset_index(drop=True)
 
-vectround = data['Round'].unique()
+#args
+OddMax= 3 #test by year
+#by year
+for t in cleanData['Year'].unique():
+    #filter
+    data = cleanData[cleanData['Year'] == t]
+    data = data[(data['B365W'] < OddMax) & (data['B365L'] < OddMax)]
 
-rootData= data
+    #check if when odds are at .50 difference outisder win or not
+    spreadData = pd.DataFrame(columns=['thresholdSpread', 'freq', 'nbOutWin', 'nbOutLoss'])
+    x = np.arange(0.05, OddMax, .05)
+    for i in x:
+        tempData = data[(data['Spread'] <= i) & (data['Spread'] > -i)]
+        spreadData = spreadData.append({'thresholdSpread' : i, 'freq' : float(len(tempData[tempData['OWin'] == 'Yes']))/float(len(tempData)), 'nbOutWin' : len(tempData[tempData['OWin'] == 'Yes']), 'nbOutLoss': len(tempData[tempData['OWin'] == 'No']), 'WinOddAvg' : np.mean(tempData['B365W']) }, ignore_index=True)
 
-for i in rootData['Round'].unique():
-    data = rootData.loc[rootData['Round'] == i]
-    print(i)
-    print('Nombre de match', len(data))
-    #print(data.head())
-    # winner spread
-    data_fav_win = data[(data['B365W'] < data['B365L'])]
-    data_out_win = data[(data['B365W'] > data['B365L'])]
-    oddSpreadWin = abs(data_fav_win['B365W'] - data_fav_win['B365L'])
-    oddSpreadSpecialWin = 1 / oddSpreadWin
-    oddSpreadOut = abs(data_out_win['B365W'] - data_out_win['B365L'])
-    oddSpreadSpecialOut = 1 / oddSpreadOut
-    #stats
-    #print('Ecart moyen Fav win : mean', round(np.mean(oddSpreadWin), 2))
-    #print('Ecart moyen Out win : mean', round(np.mean(oddSpreadOut), 2))
-    #sns.distplot(oddSpreadWin, hist=False, label='Winner')
-    #sns.distplot(oddSpreadOut, hist=False, label='Outsider')
-    #plt.savefig('imagedist.png')
-    data_fav_win_xpd = data_fav_win.copy()
-    data_fav_win_xpd.loc['oddSpread'] = oddSpreadWin
-    data_out_win_xpd = data_out_win.copy()
-    data_out_win_xpd.loc['oddSpread'] = oddSpreadOut
-    #freq
-    print('Frequence victoire outsider :', round(float(len(data_out_win))/float(len(data)), 2))
-    print('cote moyenne :', round(np.mean(data_out_win['B365W']), 2))
-    print('esperance :', round(float(len(data_out_win))/float(len(data))*np.mean(data_out_win['B365W'])-1, 2))
+    #xlpath = t + '_spreadData.xlsx'
+    #spreadData.to_excel(xlpath)
+
+#by series
+for s in cleanData['Series'].unique():
+    # filter
+    data = cleanData[cleanData['Series'] == s]
+    data = data[(data['B365W'] < OddMax) & (data['B365L'] < OddMax)]
+
+    # check if when odds are at .50 difference outisder win or not
+    spreadData = pd.DataFrame(columns=['thresholdSpread', 'freq', 'nbOutWin', 'nbOutLoss'])
+    x = np.arange(0.05, OddMax, .05)
+    for i in x:
+        tempData = data[(data['Spread'] <= i) & (data['Spread'] > -i)]
+        spreadData = spreadData.append(
+            {'thresholdSpread': i, 'freq': float(len(tempData[tempData['OWin'] == 'Yes'])) / float(len(tempData)),
+             'nbOutWin': len(tempData[tempData['OWin'] == 'Yes']), 'nbOutLoss': len(tempData[tempData['OWin'] == 'No']),
+             'WinOddAvg': np.mean(tempData['B365W'])}, ignore_index=True)
+
+    #xlpath = s + '_spreadData.xlsx'
+    #spreadData.to_excel(xlpath)
+
+#by round
+for r in cleanData['Round'].unique():
+    # filter
+    data = cleanData[cleanData['Round'] == r]
+    data = data[(data['B365W'] < OddMax) & (data['B365L'] < OddMax)]
+
+    # check if when odds are at .50 difference outisder win or not
+    spreadData = pd.DataFrame(columns=['thresholdSpread', 'freq', 'nbOutWin', 'nbOutLoss'])
+    x = np.arange(0.05, OddMax, .05)
+    for i in x:
+        tempData = data[(data['Spread'] <= i) & (data['Spread'] > -i)]
+        spreadData = spreadData.append(
+            {'thresholdSpread': i, 'freq': float(len(tempData[tempData['OWin'] == 'Yes'])) / float(len(tempData)),
+             'nbOutWin': len(tempData[tempData['OWin'] == 'Yes']), 'nbOutLoss': len(tempData[tempData['OWin'] == 'No']),
+             'WinOddAvg': np.mean(tempData['B365W'])}, ignore_index=True)
+
+    #xlpath = r + '_spreadData.xlsx'
+    #spreadData.to_excel(xlpath)
